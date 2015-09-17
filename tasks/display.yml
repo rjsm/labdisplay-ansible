@@ -25,7 +25,12 @@
      - restart lightdm
 
    - name: put config directory in pi user dir
-     file: dest=/home/pi/.config/lxsession/LXDE-pi state=directory
+     file: dest=/home/pi/.config/lxsession/LXDE-pi state=directory owner=pi group=pi
+
+   - name: set permissions on ~pi/.config directory
+     file: dest=/home/pi/.config state=directory owner=pi group=pi recurse=yes
+     notify:
+     - restart lightdm
 
    - name: set matchbox window manager in user config
      template: src=../files/desktop.conf dest=/home/pi/.config/lxsession/LXDE-pi/desktop.conf
@@ -65,9 +70,9 @@
      user: name=pi password={{ lookup('file', '../files/pipass') }}
 
   handlers:
-  - name: reboot
-    command: shutdown -r now
   - name: restart lightdm
     service: name=lightdm state=restarted
   - name: restart logging
     service: name=rsyslog state=restarted
+  - name: reboot
+    command: shutdown -r now
