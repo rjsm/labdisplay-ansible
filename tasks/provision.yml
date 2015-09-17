@@ -34,16 +34,11 @@
 
    - name: update timezone
      command: dpkg-reconfigure -f noninteractive tzdata
-   - name: remove sudoers
-     template: dest=/etc/sudoers src=../files/sudoers
 
    - name: set graphical default
      command: update-rc.d lightdm enable 2
      run_once: true
- 
-   - name: reboot
-     command: shutdown -r now "ansible reboot"
-     remote_user: root
-     async: 0
-     poll: 0
-     ignore_errors: true
+
+   - name: remove sudoers
+     template: dest=/etc/sudoers src=../files/sudoers
+

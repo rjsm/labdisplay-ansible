@@ -14,15 +14,15 @@
      notify:
      - reboot
 
-   #- name: Install packages
-   #  apt: pkg={{ item }} state=installed update_cache=true
-   #  with_items:
-   #  - matchbox-window-manager
-   #  - chromium
-   #  - x11-xserver-utils
-   #  - fbi
-   #  notify:
-   #  - restart lightdm
+   - name: Install packages
+     apt: pkg={{ item }} state=installed update_cache=true
+     with_items:
+     - matchbox-window-manager
+     - chromium
+     - x11-xserver-utils
+     - fbi
+     notify:
+     - restart lightdm
 
    - name: put config directory in pi user dir
      file: dest=/home/pi/.config/lxsession/LXDE-pi state=directory
