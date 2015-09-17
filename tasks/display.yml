@@ -1,0 +1,73 @@
+---
+- hosts: lab-displays
+  remote_user: root
+  sudo: no
+  tasks:
+   - name: set up lightdm and autologin
+     template: dest=/etc/lightdm/lightdm.conf src=../files/lightdm.conf
+
+   - name: update sources
+     template: dest=/etc/apt/sources.list src=../files/sources.list
+
+   - name: update boot options
+     template: dest=/boot/cmdline.txt src=../files/cmdline.txt
+     notify:
+     - reboot
+
+   #- name: Install packages
+   #  apt: pkg={{ item }} state=installed update_cache=true
+   #  with_items:
+   #  - matchbox-window-manager
+   #  - chromium
+   #  - x11-xserver-utils
+   #  - fbi
+   #  notify:
+   #  - restart lightdm
+
+   - name: put config directory in pi user dir
+     file: dest=/home/pi/.config/lxsession/LXDE-pi state=directory
+
+   - name: set matchbox window manager in user config
+     template: src=../files/desktop.conf dest=/home/pi/.config/lxsession/LXDE-pi/desktop.conf
+     notify:
+     - restart lightdm
+
+   - name: autorun mouse hider and browser
+     template: src=../files/autorun dest=/etc/xdg/lxsession/LXDE-pi/autostart
+     notify:
+     - restart lightdm
+
+   - name: put splash screen in place
+     copy: src=../files/splash.png dest=/etc/splash.png
+
+   - name: put splash init script in place
+     template: src=../files/asplash dest=/etc/init.d/asplash mode=0755
+     notify:
+     - reboot
+
+   - name: install asplash 
+     service: name=asplash enabled=yes
+
+   - name: enforce inventory hostnames
+     hostname: name={{ inventory_hostname }} 
+     notify:
+     - reboot
+
+   - name: drop rsyslog configuration
+     copy: src=../files/caensyslog.conf dest=/etc/rsyslog.d/caensyslog.conf
+     notify:
+     - restart logging
+
+   - name: drop update and reboot crontab
+     copy: src=../files/maintenance dest=/etc/cron.d/maintenance
+
+   - name: secure the pi user
+     user: name=pi password={{ lookup('file', '../files/pipass') }}
+
+  handlers:
+  - name: reboot
+    command: shutdown -r now
+  - name: restart lightdm
+    service: name=lightdm state=restarted
+  - name: restart logging
+    service: name=rsyslog state=restarted

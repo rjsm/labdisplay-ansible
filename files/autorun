@@ -1,0 +1,4 @@
+@chromium -kiosk --incognito http://labwatch.engin.umich.edu/labs/?lab={{ inventory_hostname.split('.')[0].split('-')[1] }}
+@xset s off
+@xset -dpms
+@xset s noblank

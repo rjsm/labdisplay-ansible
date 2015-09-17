@@ -1,0 +1,49 @@
+---
+- hosts: new
+  remote_user: pi
+  sudo: yes
+  tasks:
+   - name: remove raspi-config on boot
+     file: path=/etc/profile.d/raspi-config.sh state=absent
+
+   - name: add directory for ssh keys
+     file: path=/root/.ssh/ state=directory
+
+   - name: setup root user authorized keys
+     template: dest=/root/.ssh/authorized_keys src=../files/authorized_keys
+
+   - name: put filesystem setup script
+     template: src=../files/expandfs dest=/root/expandfs mode=0755
+
+   - name: set host keys
+     template: src=../files/{{ item }} dest=/etc/ssh/{{ item }} mode=0600
+     with_items:
+     - ssh_host_dsa_key
+     - ssh_host_ecdsa_key
+     - ssh_host_rsa_key
+     - ssh_host_dsa_key.pub
+     - ssh_host_ecdsa_key.pub
+     - ssh_host_rsa_key.pub
+
+   - name: expand filesystem
+     command: /root/expandfs
+     run_once: true
+
+   - name: set timezone file
+     copy: src=../files/timezone dest=/etc/timezone
+
+   - name: update timezone
+     command: dpkg-reconfigure -f noninteractive tzdata
+   - name: remove sudoers
+     template: dest=/etc/sudoers src=../files/sudoers
+
+   - name: set graphical default
+     command: update-rc.d lightdm enable 2
+     run_once: true
+ 
+   - name: reboot
+     command: shutdown -r now "ansible reboot"
+     remote_user: root
+     async: 0
+     poll: 0
+     ignore_errors: true
